@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Drawing App</string>
+    <string name="loading_please_wait">Loading.. Please wait.</string>
+    <string name="background_image">background image</string>
+    <string name="gallery_button">gallery button</string>
+    <string name="undo_button">undo button</string>
+    <string name="brush_size_button">brush size button</string>
+    <string name="save_button">save button</string>
+</resources>
