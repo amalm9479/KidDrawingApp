@@ -13,12 +13,19 @@ import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_brush_size.*
 import java.io.ByteArrayOutputStream
@@ -28,6 +35,8 @@ import java.lang.Exception
 @Suppress("DEPRECATION")
 
 class MainActivity : AppCompatActivity() {
+
+    private var mInterstitialAd: InterstitialAd? = null
     private var mCurrentSelectedPaint: ImageButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +44,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+        MobileAds.initialize(this) {}
+
+        var adRequest = AdRequest.Builder().build()
+
+        InterstitialAd.load(this,"ca-app-pub-5757320647359935/8983227824", adRequest, object : InterstitialAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                mInterstitialAd = null
+            }
+
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                mInterstitialAd = interstitialAd
+            }
+
+        })
+        mInterstitialAd?.fullScreenContentCallback = object: FullScreenContentCallback(){}
+
 
         // init size of the brush
         drawing_view.setBrushSize(20F)
@@ -47,7 +72,11 @@ class MainActivity : AppCompatActivity() {
         //else request permission to access the image
         ib_gallery.setOnClickListener(){
             if(isReadExternalStorageAllowed()){
-
+                if (mInterstitialAd != null) {
+                    mInterstitialAd?.show(this)
+                } else {
+                    Log.d("TAG", "The interstitial ad wasn't ready yet.")
+                }
                 val photoPickIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 startActivityForResult(photoPickIntent, GALLERY_CODE)
 
@@ -66,6 +95,11 @@ class MainActivity : AppCompatActivity() {
         // call for saving the image to the device
         ib_save.setOnClickListener{
             if(isReadExternalStorageAllowed()){
+                if (mInterstitialAd != null) {
+                    mInterstitialAd?.show(this)
+                } else {
+                    Log.d("TAG", "The interstitial ad wasn't ready yet.")
+                }
                 BitmapAsyncTask(getBitmapFromView(fl_drawing_view_container)).execute()
             } else {
                 requestPermission()
